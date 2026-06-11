@@ -17,19 +17,65 @@ new mongoose.Schema({
 
  description:String,
 
+ estimatedCalories:Number,
+
+ estimatedDuration:Number,
+
+ difficulty:{
+   type:String,
+   enum:[
+     "beginner",
+     "intermediate",
+     "advanced"
+   ],
+   default:"beginner"
+ },
+
  days:[
    {
-     day:String,
+
+     day:{
+       type:String
+     },
 
      exercises:[
        {
-         name:String,
 
-         sets:Number,
+         exerciseId:{
+           type:
+           mongoose.Schema.Types.ObjectId,
+           ref:"Exercise",
+           required:true
+         },
 
-         reps:Number
+         sets:{
+           type:Number,
+           default:3
+         },
+
+         reps:{
+           type:Number,
+           default:12
+         },
+
+         durationSeconds:{
+           type:Number,
+           default:60
+         },
+
+         restSeconds:{
+           type:Number,
+           default:30
+         },
+
+         order:{
+           type:Number,
+           default:1
+         }
+
        }
      ]
+
    }
  ]
 

@@ -21,6 +21,15 @@ const branchSchema = new mongoose.Schema(
     email: {
       type: String,
     },
+       totalUsers: {
+      type: Number,
+      default: 0,
+    },
+
+    totalTrainers: {
+      type: Number,
+      default: 0,
+    },
 
     status: {
       type: Boolean,

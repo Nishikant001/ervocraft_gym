@@ -1,6 +1,6 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-
+const Branch = require("../models/Branch");
 const User = require("../models/User");
 const RefreshToken = require("../models/RefreshToken");
 const RegistrationDraft = require("../models/RegistrationDraft");
@@ -229,6 +229,15 @@ exports.completeRegistration =
             draft.subscriptionPlanId,
         });
 
+        await Branch.findByIdAndUpdate(
+  draft.branchId,
+  {
+    $inc: {
+      totalUsers: 1,
+    },
+  }
+);
+
       const accessToken =
         generateAccessToken(
           user._id
@@ -422,3 +431,62 @@ exports.getProfile =
       user: req.user,
     });
   };
+
+
+exports.updateProfile = async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    const oldUser = await User.findById(userId);
+
+    if (!oldUser) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    if (
+      req.body.branchId &&
+      oldUser.branchId.toString() !== req.body.branchId
+    ) {
+      // Old branch
+      await Branch.findByIdAndUpdate(
+        oldUser.branchId,
+        {
+          $inc: {
+            totalUsers: -1,
+          },
+        }
+      );
+
+      // New branch
+      await Branch.findByIdAndUpdate(
+        req.body.branchId,
+        {
+          $inc: {
+            totalUsers: 1,
+          },
+        }
+      );
+    }
+
+    const user = await User.findByIdAndUpdate(
+      userId,
+      req.body,
+      {
+        new: true,
+      }
+    );
+
+    res.status(200).json({
+      success: true,
+      user,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};

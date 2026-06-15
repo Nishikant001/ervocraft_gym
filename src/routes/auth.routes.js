@@ -11,6 +11,7 @@ const {
   refreshToken,
   logout,
   getProfile,
+  updateProfile
 } = require("../controllers/auth.controller");
 
 const {
@@ -215,6 +216,47 @@ router.get(
   "/profile",
   protect,
   getProfile
+);
+
+/**
+ * @swagger
+ * /api/auth/profile:
+ *   put:
+ *     summary: Update Logged In User Profile
+ *     tags: [Authentication]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               fullName:
+ *                 type: string
+ *                 example: Nishikant Sahoo
+ *               mobile:
+ *                 type: string
+ *                 example: "9876543210"
+ *               branchId:
+ *                 type: string
+ *                 example: "685f1234567890abcdef1234"
+ *               subscriptionPlanId:
+ *                 type: string
+ *                 example: "685f9876543210abcdef5678"
+ *     responses:
+ *       200:
+ *         description: Profile updated successfully
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: User not found
+ */
+router.put(
+  "/profile",
+  protect,
+  updateProfile
 );
 
 module.exports = router;

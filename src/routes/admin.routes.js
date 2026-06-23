@@ -25,6 +25,7 @@ const {
  getDashboard,
 
  getUsers,
+ updateUser,
 
  getUserById,
 
@@ -161,6 +162,47 @@ router.delete(
  "/users/:id",
  deleteUser
 );
+
+/**
+ * @swagger
+ * /api/admin/users/{id}:
+ *   put:
+ *     summary: Update User
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               fullName:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *               mobile:
+ *                 type: string
+ *               branchId:
+ *                 type: string
+ *               subscriptionPlanId:
+ *                 type: string
+ *               role:
+ *                 type: string
+ *               isActive:
+ *                 type: boolean
+ *     responses:
+ *       200:
+ *         description: User updated successfully
+ */
+router.put("/users/:id", updateUser);
 
 module.exports =
 router;

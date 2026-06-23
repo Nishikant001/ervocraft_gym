@@ -222,3 +222,53 @@ async (req,res)=>{
  }
 
 };
+
+exports.updateUser = async (req, res) => {
+  try {
+    const {
+      fullName,
+      email,
+      mobile,
+      branchId,
+      subscriptionPlanId,
+      role,
+      isActive,
+    } = req.body;
+
+    const user = await User.findById(req.params.id);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // Update only provided fields
+    if (fullName !== undefined) user.fullName = fullName;
+    if (email !== undefined) user.email = email;
+    if (mobile !== undefined) user.mobile = mobile;
+    if (branchId !== undefined) user.branchId = branchId;
+    if (subscriptionPlanId !== undefined)
+      user.subscriptionPlanId = subscriptionPlanId;
+    if (role !== undefined) user.role = role;
+    if (isActive !== undefined) user.isActive = isActive;
+
+    await user.save();
+
+    const updatedUser = await User.findById(user._id)
+      .populate("branchId")
+      .populate("subscriptionPlanId");
+
+    res.status(200).json({
+      success: true,
+      message: "User updated successfully",
+      user: updatedUser,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};

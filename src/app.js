@@ -221,4 +221,11 @@ require(
 "./routes/reports.routes"
 )
 );
+
+app.use(
+"/api/invoices",
+require(
+"./routes/invoice.routes"
+)
+);
 module.exports = app;

@@ -20,6 +20,18 @@ require("../models/Payment");
 const SubscriptionPlan =
 require("../models/SubscriptionPlan");
 
+const generateAccessToken =
+require("../utils/generateAccessToken");
+
+const generateRefreshToken =
+require("../utils/generateRefreshToken");
+
+const invoiceService =
+require("../services/invoice.service");
+
+const logger =
+require("../utils/logger");
+
 exports.createOrder =
 async (req,res)=>{
 
@@ -207,6 +219,7 @@ async (req,res)=>{
 
   });
 
+  const updatedPayment =
   await Payment.findOneAndUpdate(
 
      {
@@ -215,13 +228,55 @@ async (req,res)=>{
      },
 
      {
+        userId:
+        user._id,
+
         paymentId:
         razorpay_payment_id,
 
         status:"success"
+     },
+
+     {
+        new:true
      }
 
   );
+
+  // Invoice generation must never block a successful
+  // payment/registration response. Failures are logged
+  // and can be retried later (Invoice is keyed uniquely
+  // on paymentId, so retrying is safe and never creates
+  // a duplicate).
+  let invoice = null;
+
+  if(updatedPayment){
+
+     try{
+
+        invoice =
+        await invoiceService
+        .generateInvoiceForPayment(
+           updatedPayment,
+           user
+        );
+
+     }catch(invoiceError){
+
+        logger.error({
+           message:
+           "Invoice generation failed",
+
+           error:
+           invoiceError.message,
+
+           paymentId:
+           updatedPayment._id
+        });
+
+     }
+
+  }
 
   const accessToken =
   generateAccessToken(
@@ -255,7 +310,12 @@ async (req,res)=>{
 
       refreshToken,
 
-      user
+      user,
+
+      invoiceNumber:
+      invoice ?
+      invoice.invoiceNumber :
+      null
 
   });
 

@@ -17,6 +17,21 @@ const userSubscriptionSchema =
         required: true,
       },
 
+      // Auto-assigned during the post-payment workflow
+      // (see paymentWorkflow.service.js). Optional so this
+      // stays backward compatible with existing records.
+      trainerId: {
+        type:
+          mongoose.Schema.Types.ObjectId,
+        ref: "Trainer",
+      },
+
+      dietId: {
+        type:
+          mongoose.Schema.Types.ObjectId,
+        ref: "UserDiet",
+      },
+
       startDate: {
         type: Date,
         required: true,

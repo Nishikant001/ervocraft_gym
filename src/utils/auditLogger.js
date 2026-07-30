@@ -7,17 +7,22 @@ async({
  userId,
  action,
  module,
- payload
+ payload,
+ session
 
 })=>{
 
- await AuditLog.create({
+ const docs =
+ await AuditLog.create(
+   [{
+     userId,
+     action,
+     module,
+     payload
+   }],
+   session ? { session } : {}
+ );
 
-   userId,
-   action,
-   module,
-   payload
-
- });
+ return docs[0];
 
 };

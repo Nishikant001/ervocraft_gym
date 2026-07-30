@@ -69,7 +69,16 @@ createOrder
  *                 type: string
  *     responses:
  *       200:
- *         description: Payment verified successfully
+ *         description: >
+ *           Payment verified successfully. Runs the full
+ *           post-payment workflow (membership update,
+ *           trainer assignment, diet assignment, invoice
+ *           generation, email, push notification,
+ *           in-app notification, activity log and
+ *           payment history) inside a single MongoDB
+ *           transaction. Calling this again for an
+ *           already-processed order returns the original
+ *           result instead of re-running the workflow.
  */
 router.post(
 "/verify-payment",

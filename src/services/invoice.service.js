@@ -50,9 +50,11 @@ const getGstPercent =
 
 // Atomically reserves the next sequence number for the
 // given calendar year so two concurrent payments can
-// never receive the same invoice number.
+// never receive the same invoice number. Accepts an
+// optional Mongo session so the reservation can be part
+// of the caller's transaction.
 const getNextInvoiceNumber =
-async(year)=>{
+async(year, session)=>{
 
  const key =
  `invoice-${year}`;
@@ -66,7 +68,8 @@ async(year)=>{
 
    {
      upsert:true,
-     new:true
+     new:true,
+     session
    }
 
  );
@@ -86,14 +89,15 @@ async(year)=>{
 // links to a DietTemplate and the staff member who
 // assigned it).
 const resolveDietAndTrainer =
-async(userId)=>{
+async(userId, session)=>{
 
  const dietAssignment =
  await UserDiet
  .findOne({ userId })
  .sort({ createdAt:-1 })
  .populate("dietTemplateId")
- .populate("assignedBy");
+ .populate("assignedBy")
+ .session(session || null);
 
  const dietPlan = {
    userDietId:null,
@@ -361,142 +365,18 @@ const buildAmountBreakdown =
 
 };
 
-// Core entry point, called right after a payment is
-// marked "success". Idempotent: if an invoice already
-// exists for this payment, it is returned as-is instead
-// of generating a duplicate.
-const generateInvoiceForPayment =
-async(payment, user)=>{
+// Renders + uploads the PDF for an already-created invoice
+// and saves the resulting url/publicId onto it. This is
+// external I/O (PDF render + Cloudinary upload), so it is
+// always called OUTSIDE any Mongo transaction: it must
+// never hold a transaction open, and its failure must
+// never roll back the DB writes that already succeeded.
+// Safe to call repeatedly (no-ops once pdfUrl is set).
+const attachInvoicePdf =
+async(invoice, user)=>{
 
- const existing =
- await Invoice.findOne({
-   paymentId:payment._id
- });
-
- if(existing){
-
-   // Self-heal: the Invoice record was created on a
-   // previous attempt but the PDF upload step failed
-   // before it could be attached. Retry just that step
-   // instead of skipping it silently.
-   if(!existing.pdfUrl){
-
-     const pdfBuffer =
-     await renderInvoicePdf(existing,user);
-
-     const {
-       url,
-       publicId
-     } = await uploadInvoicePdf(
-       pdfBuffer,
-       existing.invoiceNumber
-     );
-
-     existing.pdfUrl = url;
-     existing.pdfPublicId = publicId;
-
-     await existing.save();
-
-   }
-
-   return existing;
-
- }
-
- const plan =
- payment.subscriptionPlanId ?
- await SubscriptionPlan
- .findById(payment.subscriptionPlanId) :
- null;
-
- const {
-   dietPlan,
-   trainer
- } = await resolveDietAndTrainer(user._id);
-
- const amounts =
- buildAmountBreakdown(payment.amount);
-
- const year =
- new Date().getFullYear();
-
- const invoiceNumber =
- await getNextInvoiceNumber(year);
-
- const paymentDate =
- payment.updatedAt || new Date();
-
- let invoice;
-
- try{
-
-   invoice =
-   await Invoice.create({
-
-     invoiceNumber,
-
-     paymentId:payment._id,
-
-     userId:user._id,
-
-     membership:{
-
-       subscriptionPlanId:
-       plan ? plan._id : null,
-
-       name:
-       plan ? plan.name : null,
-
-       durationDays:
-       plan ? plan.durationDays : null
-
-     },
-
-     dietPlan,
-
-     trainer,
-
-     discount:amounts.discount,
-
-     gstPercent:amounts.gstPercent,
-
-     gstAmount:amounts.gstAmount,
-
-     subtotal:amounts.subtotal,
-
-     grandTotal:amounts.grandTotal,
-
-     paymentMethod:
-     payment.paymentMethod,
-
-     transactionId:
-     payment.paymentId,
-
-     paymentDate,
-
-     // Payment already succeeded, so the invoice is
-     // due/settled on the same date it was raised.
-     dueDate:paymentDate,
-
-     status:"paid"
-
-   });
-
- }catch(error){
-
-   // Race condition guard: two requests generating the
-   // same invoice concurrently will hit the unique
-   // paymentId index; fall back to the winning record.
-   if(error.code === 11000){
-
-     return Invoice.findOne({
-       paymentId:payment._id
-     });
-
-   }
-
-   throw error;
-
+ if(invoice.pdfUrl){
+   return invoice;
  }
 
  const pdfBuffer =
@@ -507,7 +387,7 @@ async(payment, user)=>{
    publicId
  } = await uploadInvoicePdf(
    pdfBuffer,
-   invoiceNumber
+   invoice.invoiceNumber
  );
 
  invoice.pdfUrl = url;
@@ -516,6 +396,161 @@ async(payment, user)=>{
  await invoice.save();
 
  return invoice;
+
+};
+
+// Core entry point, called right after a payment is
+// marked "success". Idempotent: if an invoice already
+// exists for this payment, it is returned as-is instead
+// of generating a duplicate (unique index on paymentId is
+// the hard guarantee; this check avoids even attempting
+// a duplicate insert).
+//
+// options.session   - optional Mongo session; when passed,
+//                      the Invoice record is written as
+//                      part of that transaction.
+// options.skipPdf    - when true, only creates/returns the
+//                      Invoice DB record and skips the PDF
+//                      render/upload (external I/O, not
+//                      appropriate inside a transaction).
+//                      Caller is expected to invoke
+//                      attachInvoicePdf() afterwards, once
+//                      the transaction has committed.
+const generateInvoiceForPayment =
+async(payment, user, options = {})=>{
+
+ const { session, skipPdf } = options;
+
+ const existing =
+ await Invoice.findOne({
+   paymentId:payment._id
+ }).session(session || null);
+
+ if(existing){
+
+   // Self-heal: the Invoice record was created on a
+   // previous attempt but the PDF upload step failed
+   // before it could be attached. Retry just that step
+   // instead of skipping it silently (never inside a
+   // transaction, matching attachInvoicePdf's contract).
+   if(!existing.pdfUrl && !skipPdf){
+     return attachInvoicePdf(existing, user);
+   }
+
+   return existing;
+
+ }
+
+ const plan =
+ payment.subscriptionPlanId ?
+ await SubscriptionPlan
+ .findById(payment.subscriptionPlanId)
+ .session(session || null) :
+ null;
+
+ const {
+   dietPlan,
+   trainer
+ } = await resolveDietAndTrainer(
+   user._id,
+   session
+ );
+
+ const amounts =
+ buildAmountBreakdown(payment.amount);
+
+ const year =
+ new Date().getFullYear();
+
+ const invoiceNumber =
+ await getNextInvoiceNumber(year, session);
+
+ const paymentDate =
+ payment.updatedAt || new Date();
+
+ let invoice;
+
+ try{
+
+   const created =
+   await Invoice.create(
+     [{
+
+       invoiceNumber,
+
+       paymentId:payment._id,
+
+       userId:user._id,
+
+       membership:{
+
+         subscriptionPlanId:
+         plan ? plan._id : null,
+
+         name:
+         plan ? plan.name : null,
+
+         durationDays:
+         plan ? plan.durationDays : null
+
+       },
+
+       dietPlan,
+
+       trainer,
+
+       discount:amounts.discount,
+
+       gstPercent:amounts.gstPercent,
+
+       gstAmount:amounts.gstAmount,
+
+       subtotal:amounts.subtotal,
+
+       grandTotal:amounts.grandTotal,
+
+       paymentMethod:
+       payment.paymentMethod,
+
+       transactionId:
+       payment.paymentId,
+
+       paymentDate,
+
+       // Payment already succeeded, so the invoice is
+       // due/settled on the same date it was raised.
+       dueDate:paymentDate,
+
+       status:"paid"
+
+     }],
+     session ? { session } : {}
+   );
+
+   invoice = created[0];
+
+ }catch(error){
+
+   // Race condition guard: two requests generating the
+   // same invoice concurrently will hit the unique
+   // paymentId index; fall back to the winning record.
+   if(error.code === 11000){
+
+     return Invoice.findOne({
+       paymentId:payment._id
+     }).session(session || null);
+
+   }
+
+   throw error;
+
+ }
+
+ if(skipPdf){
+   return invoice;
+ }
+
+ return attachInvoicePdf(invoice, user);
 
 };
 
@@ -572,6 +607,7 @@ module.exports = {
   getNextInvoiceNumber,
   buildAmountBreakdown,
   generateInvoiceForPayment,
+  attachInvoicePdf,
   sendInvoiceEmail,
   renderInvoicePdf
 };

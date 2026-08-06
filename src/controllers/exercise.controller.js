@@ -8,9 +8,13 @@ async(req,res)=>{
  try{
 
    const exercise =
-   await Exercise.create(
-     req.body
-   );
+   await Exercise.create({
+     ...req.body,
+     thumbnail:
+     req.file ?
+     req.file.path :
+     req.body.thumbnail
+   });
 
    res.status(201).json({
       success:true,
@@ -99,10 +103,19 @@ async(req,res)=>{
 
  try{
 
+   const updateData = {
+     ...req.body
+   };
+
+   if(req.file){
+     updateData.thumbnail =
+     req.file.path;
+   }
+
    const exercise =
    await Exercise.findByIdAndUpdate(
       req.params.id,
-      req.body,
+      updateData,
       {new:true}
    );
 

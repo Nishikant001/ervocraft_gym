@@ -1,52 +1,9 @@
-const UserFitnessProfile =
-require("../models/UserFitnessProfile");
-
 const round2 =
 (num)=>{
 
  return Math.round(
    (num + Number.EPSILON) * 100
  ) / 100;
-
-};
-
-// Reuses UserFitnessProfile (already maintained by
-// the fitness-profile module) instead of duplicating
-// height storage.
-const getUserHeight =
-async(userId)=>{
-
- const profile =
- await UserFitnessProfile
- .findOne({
-   userId
- })
- .select("height");
-
- return profile ?
- profile.height :
- null;
-
-};
-
-const calculateBMI =
-(weightKg,heightCm)=>{
-
- if(
-   typeof weightKg !== "number" ||
-   typeof heightCm !== "number" ||
-   heightCm <= 0
- ){
-   return null;
- }
-
- const heightM =
- heightCm / 100;
-
- return round2(
-   weightKg /
-   (heightM * heightM)
- );
 
 };
 
@@ -75,8 +32,7 @@ const calculateMealCompletion =
  const meals = [
    payload.breakfastCompleted,
    payload.lunchCompleted,
-   payload.dinnerCompleted,
-   payload.snacksCompleted
+   payload.dinnerCompleted
  ];
 
  const tracked =
@@ -262,30 +218,11 @@ async(DietProgress,userId,payload)=>{
    })
  );
 
- if(typeof payload.currentWeight === "number"){
-
-   let heightCm =
-   payload.height;
-
-   if(typeof heightCm !== "number"){
-     heightCm =
-     await getUserHeight(userId);
-   }
-
-   const bmi =
-   calculateBMI(
-     payload.currentWeight,
-     heightCm
-   );
-
-   if(bmi !== null){
-     computed.bmi = bmi;
-   }
-
-   if(typeof heightCm === "number"){
-     computed.height = heightCm;
-   }
-
+ if(
+   typeof payload.currentWeight === "number" &&
+   typeof payload.height === "number"
+ ){
+   computed.height = payload.height;
  }
 
  const mealCompletionPercent =
@@ -324,8 +261,6 @@ async(DietProgress,userId,payload)=>{
 
 module.exports = {
   round2,
-  calculateBMI,
-  getUserHeight,
   getBaselineEntry,
   calculateMealCompletion,
   calculateWeightMetrics,

@@ -293,12 +293,6 @@ async(req,res)=>{
      targetWeight:
      req.body.targetWeight,
 
-     bodyFatPercent:
-     req.body.bodyFatPercent,
-
-     muscleMass:
-     req.body.muscleMass,
-
      caloriesTarget:
      req.body.caloriesTarget,
 
@@ -326,14 +320,8 @@ async(req,res)=>{
      dinnerCompleted:
      req.body.dinnerCompleted,
 
-     snacksCompleted:
-     req.body.snacksCompleted,
-
      workoutCompletionPercent:
      req.body.workoutCompletionPercent,
-
-     measurements:
-     req.body.measurements,
 
      photos:
      req.body.photos,
@@ -458,12 +446,7 @@ async(req,res)=>{
      dinnerCompleted:
      req.body.dinnerCompleted !== undefined ?
      req.body.dinnerCompleted :
-     existing.dinnerCompleted,
-
-     snacksCompleted:
-     req.body.snacksCompleted !== undefined ?
-     req.body.snacksCompleted :
-     existing.snacksCompleted
+     existing.dinnerCompleted
 
    };
 
@@ -931,9 +914,6 @@ async(req,res)=>{
 const GRAPH_METRICS = {
 
  weight:"currentWeight",
- bmi:"bmi",
- bodyFat:"bodyFatPercent",
- muscleMass:"muscleMass",
  calories:"caloriesConsumed",
  waterIntake:"waterIntake",
  mealCompletion:"mealCompletionPercent",
@@ -1155,12 +1135,6 @@ async(req,res)=>{
      goalRemaining:latest.goalRemaining,
 
      progressPercent:latest.progressPercent,
-
-     bmi:latest.bmi,
-
-     bodyFatPercent:latest.bodyFatPercent,
-
-     muscleMass:latest.muscleMass,
 
      mealCompletionPercent:latest.mealCompletionPercent,
 

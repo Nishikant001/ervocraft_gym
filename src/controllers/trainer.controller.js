@@ -8,9 +8,13 @@ async(req,res)=>{
  try{
 
    const trainer =
-   await Trainer.create(
-     req.body
-   );
+   await Trainer.create({
+     ...req.body,
+     profileImage:
+     req.file ?
+     req.file.path :
+     req.body.profileImage
+   });
 
    await Branch.findByIdAndUpdate(
   trainer.branchId,
@@ -97,9 +101,17 @@ exports.updateTrainer = async (req, res) => {
       );
     }
 
+    const updateData = {
+      ...req.body
+    };
+
+    if (req.file) {
+      updateData.profileImage = req.file.path;
+    }
+
     const trainer = await Trainer.findByIdAndUpdate(
       req.params.id,
-      req.body,
+      updateData,
       { new: true }
     );
 

@@ -102,10 +102,6 @@ require(
  *                 type: number
  *               height:
  *                 type: number
- *               bodyFatPercent:
- *                 type: number
- *               muscleMass:
- *                 type: number
  *               caloriesTarget:
  *                 type: number
  *               proteinTarget:
@@ -124,27 +120,8 @@ require(
  *                 type: boolean
  *               dinnerCompleted:
  *                 type: boolean
- *               snacksCompleted:
- *                 type: boolean
  *               workoutCompletionPercent:
  *                 type: number
- *               measurements:
- *                 type: object
- *                 properties:
- *                   chest:
- *                     type: number
- *                   waist:
- *                     type: number
- *                   hips:
- *                     type: number
- *                   biceps:
- *                     type: number
- *                   thighs:
- *                     type: number
- *                   shoulders:
- *                     type: number
- *                   neck:
- *                     type: number
  *               photos:
  *                 type: array
  *                 items:
@@ -204,10 +181,6 @@ createProgress
  *                 type: number
  *               targetWeight:
  *                 type: number
- *               bodyFatPercent:
- *                 type: number
- *               muscleMass:
- *                 type: number
  *               caloriesConsumed:
  *                 type: number
  *               waterIntake:
@@ -217,8 +190,6 @@ createProgress
  *               lunchCompleted:
  *                 type: boolean
  *               dinnerCompleted:
- *                 type: boolean
- *               snacksCompleted:
  *                 type: boolean
  *               workoutCompletionPercent:
  *                 type: number
@@ -457,7 +428,7 @@ getMonthlyProgress
  *         name: metric
  *         schema:
  *           type: string
- *           enum: [weight, bmi, bodyFat, muscleMass, calories, waterIntake, mealCompletion, workoutCompletion]
+ *           enum: [weight, calories, waterIntake, mealCompletion, workoutCompletion]
  *       - in: query
  *         name: days
  *         schema:

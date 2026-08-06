@@ -1,27 +1,6 @@
 const mongoose =
 require("mongoose");
 
-const measurementSchema =
-new mongoose.Schema({
-
-  chest:Number,
-
-  waist:Number,
-
-  hips:Number,
-
-  biceps:Number,
-
-  thighs:Number,
-
-  shoulders:Number,
-
-  neck:Number
-
-},{
-  _id:false
-});
-
 const progressPhotoSchema =
 new mongoose.Schema({
 
@@ -94,13 +73,6 @@ new mongoose.Schema({
 
   height:Number,
 
-  // Body composition
-  bmi:Number,
-
-  bodyFatPercent:Number,
-
-  muscleMass:Number,
-
   // Nutrition targets
   caloriesTarget:Number,
 
@@ -127,11 +99,6 @@ new mongoose.Schema({
   },
 
   dinnerCompleted:{
-    type:Boolean,
-    default:false
-  },
-
-  snacksCompleted:{
     type:Boolean,
     default:false
   },
@@ -165,9 +132,7 @@ new mongoose.Schema({
 
   monthlyProgress:Number,
 
-  // Media & body measurements
-  measurements:measurementSchema,
-
+  // Media
   photos:[progressPhotoSchema],
 
   status:{

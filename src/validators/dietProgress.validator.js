@@ -1,39 +1,6 @@
 const Joi =
 require("joi");
 
-const measurementsSchema =
-Joi.object({
-
- chest:
- Joi.number()
- .min(0),
-
- waist:
- Joi.number()
- .min(0),
-
- hips:
- Joi.number()
- .min(0),
-
- biceps:
- Joi.number()
- .min(0),
-
- thighs:
- Joi.number()
- .min(0),
-
- shoulders:
- Joi.number()
- .min(0),
-
- neck:
- Joi.number()
- .min(0)
-
-});
-
 const photoSchema =
 Joi.object({
 
@@ -89,15 +56,6 @@ Joi.object({
  Joi.number()
  .min(0),
 
- bodyFatPercent:
- Joi.number()
- .min(0)
- .max(100),
-
- muscleMass:
- Joi.number()
- .min(0),
-
  caloriesTarget:
  Joi.number()
  .min(0),
@@ -131,16 +89,10 @@ Joi.object({
  dinnerCompleted:
  Joi.boolean(),
 
- snacksCompleted:
- Joi.boolean(),
-
  workoutCompletionPercent:
  Joi.number()
  .min(0)
  .max(100),
-
- measurements:
- measurementsSchema,
 
  photos:
  Joi.array()
@@ -192,15 +144,6 @@ Joi.object({
  Joi.number()
  .min(0),
 
- bodyFatPercent:
- Joi.number()
- .min(0)
- .max(100),
-
- muscleMass:
- Joi.number()
- .min(0),
-
  caloriesTarget:
  Joi.number()
  .min(0),
@@ -234,16 +177,10 @@ Joi.object({
  dinnerCompleted:
  Joi.boolean(),
 
- snacksCompleted:
- Joi.boolean(),
-
  workoutCompletionPercent:
  Joi.number()
  .min(0)
  .max(100),
-
- measurements:
- measurementsSchema,
 
  photos:
  Joi.array()

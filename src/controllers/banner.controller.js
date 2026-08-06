@@ -6,9 +6,13 @@ async (req, res) => {
   try {
 
     const banner =
-    await Banner.create(
-      req.body
-    );
+    await Banner.create({
+      ...req.body,
+      image:
+      req.file ?
+      req.file.path :
+      req.body.image
+    });
 
     res.status(201).json({
       success: true,
@@ -56,10 +60,18 @@ exports.updateBanner =
 async (req, res) => {
   try {
 
+    const updateData = {
+      ...req.body
+    };
+
+    if (req.file) {
+      updateData.image = req.file.path;
+    }
+
     const banner =
     await Banner.findByIdAndUpdate(
       req.params.id,
-      req.body,
+      updateData,
       { new: true }
     );
 

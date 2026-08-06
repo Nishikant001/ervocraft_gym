@@ -20,6 +20,11 @@ require(
 "../middleware/role.middleware"
 );
 
+const upload =
+require(
+"../middleware/upload.middleware"
+);
+
 const {
 
  createExercise,
@@ -52,7 +57,7 @@ require(
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
  *             properties:
@@ -68,6 +73,9 @@ require(
  *                 type: string
  *               caloriesBurnPerMinute:
  *                 type: number
+ *               thumbnail:
+ *                 type: string
+ *                 format: binary
  *     responses:
  *       201:
  *         description: Exercise created successfully
@@ -76,6 +84,7 @@ router.post(
 "/",
 protect,
 authorize("admin"),
+upload.single("thumbnail"),
 createExercise
 );
 
@@ -139,6 +148,7 @@ router.put(
 "/:id",
 protect,
 authorize("admin"),
+upload.single("thumbnail"),
 updateExercise
 );
 

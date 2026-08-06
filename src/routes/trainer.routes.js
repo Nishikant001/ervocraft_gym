@@ -20,6 +20,11 @@ require(
 "../middleware/role.middleware"
 );
 
+const upload =
+require(
+"../middleware/upload.middleware"
+);
+
 const {
 
  createTrainer,
@@ -51,7 +56,7 @@ require(
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
  *             properties:
@@ -65,6 +70,9 @@ require(
  *                 type: string
  *               experience:
  *                 type: number
+ *               profileImage:
+ *                 type: string
+ *                 format: binary
  *     responses:
  *       201:
  *         description: Trainer created successfully
@@ -73,6 +81,7 @@ router.post(
 "/",
 protect,
 authorize("admin"),
+upload.single("profileImage"),
 createTrainer
 );
 
@@ -119,6 +128,7 @@ router.put(
 "/:id",
 protect,
 authorize("admin"),
+upload.single("profileImage"),
 updateTrainer
 );
 

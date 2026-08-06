@@ -31,6 +31,11 @@ require(
 "../middleware/role.middleware"
 );
 
+const upload =
+require(
+"../middleware/upload.middleware"
+);
+
 /**
  * @swagger
  * tags:
@@ -49,7 +54,7 @@ require(
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
  *             properties:
@@ -57,6 +62,7 @@ require(
  *                 type: string
  *               image:
  *                 type: string
+ *                 format: binary
  *               description:
  *                 type: string
  *               status:
@@ -69,6 +75,7 @@ router.post(
 "/",
 protect,
 authorize("admin"),
+upload.single("image"),
 createBanner
 );
 
@@ -111,6 +118,7 @@ router.put(
 "/:id",
 protect,
 authorize("admin"),
+upload.single("image"),
 updateBanner
 );
 

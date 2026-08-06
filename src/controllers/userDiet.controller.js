@@ -121,8 +121,6 @@ async(req,res)=>{
 
      dinnerCompleted,
 
-     snacksCompleted,
-
      waterIntake,
 
      caloriesConsumed
@@ -142,8 +140,6 @@ async(req,res)=>{
       lunchCompleted,
 
       dinnerCompleted,
-
-      snacksCompleted,
 
       waterIntake,
 

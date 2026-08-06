@@ -167,6 +167,8 @@ async(req,res)=>{
       req.user._id,
 
       imageUrl:
+      req.file ?
+      req.file.path :
       req.body.imageUrl,
 
       note:

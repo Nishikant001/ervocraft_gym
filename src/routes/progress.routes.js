@@ -12,6 +12,11 @@ require(
 "../middleware/auth.middleware"
 );
 
+const upload =
+require(
+"../middleware/upload.middleware"
+);
+
 const {
 
  addProgress,
@@ -150,12 +155,13 @@ getMeasurements
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
  *             properties:
- *               photoUrl:
+ *               imageUrl:
  *                 type: string
+ *                 format: binary
  *               note:
  *                 type: string
  *     responses:
@@ -165,6 +171,7 @@ getMeasurements
 router.post(
 "/photo",
 protect,
+upload.single("imageUrl"),
 addProgressPhoto
 );
 

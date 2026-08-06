@@ -76,6 +76,9 @@ require(
  *               thumbnail:
  *                 type: string
  *                 format: binary
+ *               video:
+ *                 type: string
+ *                 format: binary
  *     responses:
  *       201:
  *         description: Exercise created successfully
@@ -84,7 +87,10 @@ router.post(
 "/",
 protect,
 authorize("admin"),
-upload.single("thumbnail"),
+upload.exerciseMedia.fields([
+ {name:"thumbnail",maxCount:1},
+ {name:"video",maxCount:1}
+]),
 createExercise
 );
 
@@ -148,7 +154,10 @@ router.put(
 "/:id",
 protect,
 authorize("admin"),
-upload.single("thumbnail"),
+upload.exerciseMedia.fields([
+ {name:"thumbnail",maxCount:1},
+ {name:"video",maxCount:1}
+]),
 updateExercise
 );
 

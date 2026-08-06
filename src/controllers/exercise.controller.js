@@ -11,9 +11,13 @@ async(req,res)=>{
    await Exercise.create({
      ...req.body,
      thumbnail:
-     req.file ?
-     req.file.path :
-     req.body.thumbnail
+     req.files && req.files.thumbnail ?
+     req.files.thumbnail[0].path :
+     req.body.thumbnail,
+     videoUrl:
+     req.files && req.files.video ?
+     req.files.video[0].path :
+     req.body.videoUrl
    });
 
    res.status(201).json({
@@ -107,9 +111,14 @@ async(req,res)=>{
      ...req.body
    };
 
-   if(req.file){
+   if(req.files && req.files.thumbnail){
      updateData.thumbnail =
-     req.file.path;
+     req.files.thumbnail[0].path;
+   }
+
+   if(req.files && req.files.video){
+     updateData.videoUrl =
+     req.files.video[0].path;
    }
 
    const exercise =

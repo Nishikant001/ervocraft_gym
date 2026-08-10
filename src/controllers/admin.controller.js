@@ -272,3 +272,85 @@ exports.updateUser = async (req, res) => {
     });
   }
 };
+
+
+exports.getUserCountByStatus = async (req, res) => {
+  try {
+    const result = await User.aggregate([
+      {
+        $match: {
+          role: "user",
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          totalUsers: {
+            $sum: 1,
+          },
+          activeUsers: {
+            $sum: {
+              $cond: [
+                { $eq: ["$isActive", true] },
+                1,
+                0,
+              ],
+            },
+          },
+          inactiveUsers: {
+            $sum: {
+              $cond: [
+                { $eq: ["$isActive", false] },
+                1,
+                0,
+              ],
+            },
+          },
+        },
+      },
+    ]);
+
+    const counts = result[0] || {
+      totalUsers: 0,
+      activeUsers: 0,
+      inactiveUsers: 0,
+    };
+
+    res.status(200).json({
+      success: true,
+      data: counts,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+
+exports.getRecentMembers = async (req, res) => {
+  try {
+    const limit = Number(req.query.limit) || 10;
+
+    const recentMembers = await User.find({
+      role: "user",
+    })
+      .populate("branchId")
+      .populate("subscriptionPlanId")
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .select("-password");
+
+    res.status(200).json({
+      success: true,
+      count: recentMembers.length,
+      data: recentMembers,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};

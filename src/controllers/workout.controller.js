@@ -6,7 +6,7 @@ exports.createWorkout =
 async (req, res) => {
   try {
 
-    const workout =
+    const workout = 
     await WorkoutTemplate.create(
       req.body
     );

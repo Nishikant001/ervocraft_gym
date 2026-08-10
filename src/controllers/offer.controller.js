@@ -3,7 +3,12 @@ const Offer = require("../models/Offer");
 // CREATE OFFER
 exports.createOffer = async (req, res) => {
   try {
-    const offer = await Offer.create(req.body);
+    const offer = await Offer.create({
+      ...req.body,
+      imageUrl: req.file
+        ? req.file.path
+        : req.body.imageUrl,
+    });
 
     res.status(201).json({
       success: true,
@@ -39,10 +44,21 @@ exports.getOffers = async (req, res) => {
 // UPDATE OFFER
 exports.updateOffer = async (req, res) => {
   try {
+    const updateData = {
+      ...req.body,
+    };
+
+    if (req.file) {
+      updateData.imageUrl = req.file.path;
+    }
+
     const offer = await Offer.findByIdAndUpdate(
       req.params.id,
-      req.body,
-      { new: true }
+      updateData,
+      {
+        new: true,
+        runValidators: true,
+      }
     );
 
     if (!offer) {

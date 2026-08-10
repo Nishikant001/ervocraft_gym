@@ -5,11 +5,15 @@ const offerSchema =
 new mongoose.Schema({
 
  title:{
-   type:String,
+   type:String, 
    required:true
  },
 
  description:String,
+ 
+ imageUrl: {
+      type: String,
+    },
 
  discountType:{
    type:String,

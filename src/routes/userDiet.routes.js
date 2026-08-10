@@ -71,7 +71,8 @@ router.post(
 protect,
 authorize(
 "admin",
-"trainer"
+"trainer",
+"user"
 ),
 assignDiet
 );

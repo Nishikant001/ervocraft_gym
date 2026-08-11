@@ -17,6 +17,11 @@ new mongoose.Schema({
    ref:"UserWorkout",
    required:true
  },
+  // Which day of the workout program this session belongs to
+  day: {
+    type: Number,
+    required: true
+  },
 
  startedAt:{
    type:Date,

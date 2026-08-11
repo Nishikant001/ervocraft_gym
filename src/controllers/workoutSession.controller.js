@@ -18,44 +18,194 @@ require(
 "../models/Exercise"
 );
 
-exports.startWorkout =
-async(req,res)=>{
+// exports.startWorkout =
+// async(req,res)=>{
 
- try{
+//  try{
 
-   const {
-     userWorkoutId
-   } = req.body;
+//    const {
+//      userWorkoutId
+//    } = req.body;
 
-   const session =
-   await WorkoutSession.create({
+//    const session =
+//    await WorkoutSession.create({
 
-      userId:
-      req.user._id,
+//       userId:
+//       req.user._id,
 
-      userWorkoutId
+//       userWorkoutId
 
-   });
+//    });
 
-   res.status(201).json({
+//    res.status(201).json({
 
-      success:true,
+//       success:true,
+
+//       session
+
+//    });
+
+//  }catch(error){
+
+//    res.status(500).json({
+
+//       success:false,
+
+//       message:error.message
+
+//    });
+
+//  }
+
+// };
+
+exports.startWorkout = async (req, res) => {
+
+  try {
+
+    const { userWorkoutId } = req.body;
+
+    // =========================================
+    // 1. FIND USER WORKOUT
+    // =========================================
+
+    const userWorkout =
+      await UserWorkout.findOne({
+        _id: userWorkoutId,
+        userId: req.user._id
+      }).populate("workoutTemplateId");
+
+    if (!userWorkout) {
+
+      return res.status(404).json({
+        success: false,
+        message: "Workout assignment not found."
+      });
+
+    }
+
+    // =========================================
+    // 2. CHECK IF A SESSION IS ALREADY RUNNING
+    // =========================================
+
+    const activeSession =
+      await WorkoutSession.findOne({
+        userId: req.user._id,
+        userWorkoutId: userWorkoutId,
+        status: "in_progress"
+      });
+
+    if (activeSession) {
+
+      return res.status(200).json({
+        success: true,
+        message: "You already have a workout in progress.",
+        session: activeSession
+      });
+
+    }
+
+    // =========================================
+    // 3. FIND COMPLETED SESSIONS
+    // =========================================
+
+    const completedSessions =
+      await WorkoutSession.find({
+        userId: req.user._id,
+        userWorkoutId: userWorkoutId,
+        status: "completed"
+      }).sort({
+        day: 1
+      });
+
+    // =========================================
+    // 4. DETERMINE NEXT DAY
+    // =========================================
+
+    const completedDays =
+      completedSessions.map(
+        session => session.day
+      );
+
+    let nextDay = 1;
+
+    while (
+      completedDays.includes(nextDay)
+    ) {
+      nextDay++;
+    }
+
+    // =========================================
+    // 5. CHECK IF PROGRAM IS FINISHED
+    // =========================================
+
+    const workoutTemplate =
+      userWorkout.workoutTemplateId;
+
+    const availableDays =
+      workoutTemplate?.days || [];
+
+    const selectedDay =
+      availableDays.find(
+        item =>
+          Number(item.day) === nextDay
+      );
+
+    if (!selectedDay) {
+
+      return res.status(400).json({
+        success: false,
+        message: "You have completed this workout program."
+      });
+
+    }
+
+    // =========================================
+    // 6. CREATE WORKOUT SESSION
+    // =========================================
+
+    const session =
+      await WorkoutSession.create({
+
+        userId: req.user._id,
+
+        userWorkoutId,
+
+        day: nextDay
+
+      });
+
+    // =========================================
+    // 7. RETURN SESSION
+    // =========================================
+
+    res.status(201).json({
+
+      success: true,
+
+      message:
+        `Day ${nextDay} workout started successfully.`,
 
       session
 
-   });
+    });
 
- }catch(error){
+  } catch (error) {
 
-   res.status(500).json({
+    console.log(
+      "Start Workout Error:",
+      error
+    );
 
-      success:false,
+    res.status(500).json({
 
-      message:error.message
+      success: false,
 
-   });
+      message: error.message
 
- }
+    });
+
+  }
 
 };
 

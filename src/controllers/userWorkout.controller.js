@@ -176,51 +176,44 @@ exports.startWorkout = async (req, res) => {
   }
 };
 
-exports.getMyWorkouts =
-async(req,res)=>{
+exports.getMyWorkouts = async (req, res) => {
+  try {
 
- try{
+    const workouts = await UserWorkout
+      .find({
+        userId: req.user._id
+      })
 
-   const workouts =
-   await UserWorkout
-   .find({
-      userId:req.user._id
-   })
-   .populate({
-      path:
-      "workoutTemplateId",
+      // Populate WorkoutTemplate
+      .populate({
+        path: "workoutTemplateId",
 
-      populate:[
-        {
-          path:"goalGroupId"
-        },
-        {
-          path:
-          "days.exercises.exerciseId"
-        }
-      ]
-   });
+        populate: [
+          // WorkoutTemplate.goalGroupId
+          {
+            path: "goalGroupId"
+          },
 
-   res.status(200).json({
+          // WorkoutTemplate.days.exercises.exerciseId
+          {
+            path: "days.exercises.exerciseId"
+          }
+        ]
+      });
 
-      success:true,
-
+    res.status(200).json({
+      success: true,
       workouts
+    });
 
-   });
+  } catch (error) {
 
- }catch(error){
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
 
-   res.status(500).json({
-
-      success:false,
-
-      message:error.message
-
-   });
-
- }
-
+  }
 };
 
 exports.getAssignments =

@@ -70,7 +70,7 @@ new CloudinaryStorage({
    folder:"gym-app/videos",
    resource_type:"video",
    allowed_formats:[
-     "mp4",
+     "mp4", 
      "mov",
      "avi",
      "mkv",

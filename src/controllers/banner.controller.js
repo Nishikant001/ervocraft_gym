@@ -63,7 +63,7 @@ async (req, res) => {
     const updateData = {
       ...req.body
     };
-
+ 
     if (req.file) {
       updateData.image = req.file.path;
     }

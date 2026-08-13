@@ -2,29 +2,45 @@ const Product =
 require("../models/Product");
 
 // CREATE
-exports.createProduct =
-async(req,res)=>{
+exports.createProduct = async (req, res) => {
 
- try{
+  try {
 
-   const product =
-   await Product.create(
-      req.body
-   );
+    const imageUrls = req.files
+      ? req.files.map(file => file.path)
+      : [];
 
-   res.status(201).json({
-      success:true,
+    const productData = {
+      ...req.body,
+      images: imageUrls
+    };
+
+    if (typeof req.body.flavors === "string") {
+
+      productData.flavors =
+        req.body.flavors
+          .split(",")
+          .map(item => item.trim())
+          .filter(Boolean);
+
+    }
+
+    const product =
+      await Product.create(productData);
+
+    res.status(201).json({
+      success: true,
       product
-   });
+    });
 
- }catch(error){
+  } catch (error) {
 
-   res.status(500).json({
-      success:false,
-      message:error.message
-   });
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
 
- }
+  }
 
 };
 
@@ -83,31 +99,69 @@ async(req,res)=>{
 };
 
 // UPDATE
-exports.updateProduct =
-async(req,res)=>{
+exports.updateProduct = async (req, res) => {
 
- try{
+  try {
 
-   const product =
-   await Product.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      {new:true}
-   );
+    const product =
+      await Product.findById(req.params.id);
 
-   res.status(200).json({
-      success:true,
-      product
-   });
+    if (!product) {
 
- }catch(error){
+      return res.status(404).json({
+        success: false,
+        message: "Product not found"
+      });
 
-   res.status(500).json({
-      success:false,
-      message:error.message
-   });
+    }
 
- }
+    const updateData = {
+      ...req.body
+    };
+
+    // New images uploaded
+    if (req.files && req.files.length > 0) {
+
+      updateData.images =
+        req.files.map(
+          file => file.path
+        );
+
+    }
+
+    if (typeof req.body.flavors === "string") {
+
+      updateData.flavors =
+        req.body.flavors
+          .split(",")
+          .map(item => item.trim())
+          .filter(Boolean);
+
+    }
+
+    const updatedProduct =
+      await Product.findByIdAndUpdate(
+        req.params.id,
+        updateData,
+        {
+          new: true,
+          runValidators: true
+        }
+      );
+
+    res.status(200).json({
+      success: true,
+      product: updatedProduct
+    });
+
+  } catch (error) {
+
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+
+  }
 
 };
 

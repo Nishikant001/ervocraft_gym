@@ -38,8 +38,11 @@ new mongoose.Schema({
    default:0
  },
 
- images:[String],
-
+images:{
+  type:[String],
+  default:[]
+},
+ 
  flavors:[String],
 
  weight:String,

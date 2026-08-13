@@ -8,7 +8,7 @@ const branchSchema = new mongoose.Schema(
       trim: true,
     },
 
-    address: {
+    address: { 
       type: String,
       required: true,
     },

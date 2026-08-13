@@ -149,67 +149,109 @@ async(req,res)=>{
 
 };
 
-exports.getMembershipAnalytics =
-async(req,res)=>{
+exports.getMembershipAnalytics = async (req, res) => {
 
- try{
+  try {
 
-   const report =
-   await UserSubscription.aggregate([
+    const report =
+      await UserSubscription.aggregate([
 
-      {
-        $match:{
-          status:"active"
-        }
-      },
-
-      {
-        $lookup:{
-          from:"users",
-          localField:"userId",
-          foreignField:"_id",
-          as:"user"
-        }
-      },
-
-      {
-        $unwind:"$user"
-      },
-
-      {
-        $group:{
-
-          _id:
-          "$user.branchId",
-
-          activeMembers:{
-            $sum:1
+        // 1. Only active subscriptions
+        {
+          $match: {
+            status: "active"
           }
+        },
 
+        // 2. Get User using userId
+        {
+          $lookup: {
+            from: "users",
+            localField: "userId",
+            foreignField: "_id",
+            as: "user"
+          }
+        },
+
+        // 3. Convert user array into object
+        {
+          $unwind: "$user"
+        },
+
+        // 4. Get Branch using User.branchId
+        {
+          $lookup: {
+            from: "branches",
+            localField: "user.branchId",
+            foreignField: "_id",
+            as: "branch"
+          }
+        },
+
+        // 5. Convert branch array into object
+        {
+          $unwind: "$branch"
+        },
+
+        // 6. Group active members branch-wise
+        {
+          $group: {
+
+            _id: "$branch._id",
+
+            branchName: {
+              $first: "$branch.branchName"
+            },
+
+            activeMembers: {
+              $sum: 1
+            }
+
+          }
+        },
+
+        // 7. Remove MongoDB _id from response
+        {
+          $project: {
+
+            _id: 0,
+
+            branchName: 1,
+
+            activeMembers: 1
+
+          }
+        },
+
+        // 8. Sort alphabetically by branch name
+        {
+          $sort: {
+            branchName: 1
+          }
         }
-      }
 
-   ]);
+      ]);
 
-   res.status(200).json({
 
-      success:true,
+    res.status(200).json({
+
+      success: true,
 
       report
 
-   });
+    });
 
- }catch(error){
+  } catch (error) {
 
-   res.status(500).json({
+    res.status(500).json({
 
-      success:false,
+      success: false,
 
-      message:error.message
+      message: error.message
 
-   });
+    });
 
- }
+  }
 
 };
 

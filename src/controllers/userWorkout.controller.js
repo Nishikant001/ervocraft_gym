@@ -93,7 +93,93 @@ require("../models/WorkoutTemplate");
 
 
 
+// exports.startWorkout = async (req, res) => {
+//   try {
+
+//     const {
+//       workoutTemplateId,
+//       startDate,
+//       endDate,
+//       notes
+//     } = req.body;
+
+//     // Logged-in user
+//     const userId = req.user._id;
+
+//     // Check user
+//     const user = await User.findById(userId);
+
+//     if (!user) {
+//       return res.status(404).json({
+//         success: false,
+//         message: "User not found"
+//       });
+//     }
+
+//     // Check workout template
+//     const workout = await WorkoutTemplate.findById(
+//       workoutTemplateId
+//     );
+
+//     if (!workout) {
+//       return res.status(404).json({
+//         success: false,
+//         message: "Workout not found"
+//       });
+//     }
+
+//     // Check if user already started this workout
+//     const existingWorkout =
+//       await UserWorkout.findOne({
+//         userId,
+//         workoutTemplateId,
+//         status: "active"
+//       });
+
+//     if (existingWorkout) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "You have already started this workout"
+//       });
+//     }
+
+//     // Create user's workout
+//     const userWorkout =
+//       await UserWorkout.create({
+
+//         userId,
+
+//         workoutTemplateId,
+
+//         startDate,
+
+//         endDate,
+
+//         status: "active",
+
+//         notes
+//       });
+
+//     res.status(201).json({
+//       success: true,
+//       message: "Workout started successfully",
+//       userWorkout
+//     });
+
+//   } catch (error) {
+
+//     res.status(500).json({
+//       success: false,
+//       message: error.message
+//     });
+
+//   }
+// };
+
+
+
 exports.startWorkout = async (req, res) => {
+
   try {
 
     const {
@@ -117,9 +203,10 @@ exports.startWorkout = async (req, res) => {
     }
 
     // Check workout template
-    const workout = await WorkoutTemplate.findById(
-      workoutTemplateId
-    );
+    const workout =
+      await WorkoutTemplate.findById(
+        workoutTemplateId
+      );
 
     if (!workout) {
       return res.status(404).json({
@@ -128,7 +215,10 @@ exports.startWorkout = async (req, res) => {
       });
     }
 
-    // Check if user already started this workout
+    // =========================================
+    // CHECK EXISTING USER WORKOUT
+    // =========================================
+
     const existingWorkout =
       await UserWorkout.findOne({
         userId,
@@ -136,14 +226,29 @@ exports.startWorkout = async (req, res) => {
         status: "active"
       });
 
+    // =========================================
+    // ALREADY ASSIGNED
+    // =========================================
+
     if (existingWorkout) {
-      return res.status(400).json({
-        success: false,
-        message: "You have already started this workout"
+
+      return res.status(200).json({
+        success: true,
+        alreadyAssigned: true,
+        message:
+          "Workout assignment already exists.",
+
+        userWorkout:
+          existingWorkout
+
       });
+
     }
 
-    // Create user's workout
+    // =========================================
+    // CREATE USER WORKOUT
+    // =========================================
+
     const userWorkout =
       await UserWorkout.create({
 
@@ -158,22 +263,43 @@ exports.startWorkout = async (req, res) => {
         status: "active",
 
         notes
+
       });
 
-    res.status(201).json({
+    // =========================================
+    // RESPONSE
+    // =========================================
+
+    return res.status(201).json({
+
       success: true,
-      message: "Workout started successfully",
+
+      alreadyAssigned: false,
+
+      message:
+        "Workout started successfully",
+
       userWorkout
+
     });
 
   } catch (error) {
 
-    res.status(500).json({
+    console.log(
+      "Assign Workout Error:",
+      error
+    );
+
+    return res.status(500).json({
+
       success: false,
+
       message: error.message
+
     });
 
   }
+
 };
 
 exports.getMyWorkouts = async (req, res) => {

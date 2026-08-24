@@ -202,6 +202,13 @@ require(
 );
 
 app.use(
+  "/api/wishlist",
+  require(
+    "./routes/wishlist.routes"
+  )
+);
+
+app.use(
 "/api/orders",
 require(
 "./routes/order.routes"

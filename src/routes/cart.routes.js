@@ -15,6 +15,7 @@ require(
 const {
 
  addToCart,
+ updateCartQuantity,
  getCart,
  removeCartItem
 
@@ -96,6 +97,13 @@ getCart
  *       200:
  *         description: Product removed from cart successfully
  */
+
+router.patch(
+  "/:productId",
+  protect,
+  updateCartQuantity
+);
+
 router.delete(
 "/:productId",
 protect,

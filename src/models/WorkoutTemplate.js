@@ -15,6 +15,11 @@ new mongoose.Schema({
    required:true
  },
 
+ thumbnail:{
+   type:String,
+   default:""
+ },
+
  description:String,
 
  estimatedCalories:Number,

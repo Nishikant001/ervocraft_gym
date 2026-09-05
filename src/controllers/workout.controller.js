@@ -6,9 +6,28 @@ exports.createWorkout =
 async (req, res) => {
   try {
 
-    const workout = 
+    const data = {
+      ...req.body
+    };
+
+    if (typeof data.days === "string") {
+      try {
+        data.days = JSON.parse(data.days);
+      } catch (parseError) {
+        return res.status(400).json({
+          success: false,
+          message: "days must be valid JSON"
+        });
+      }
+    }
+
+    if (req.file) {
+      data.thumbnail = req.file.path || req.file.secure_url || req.file.url;
+    }
+
+    const workout =
     await WorkoutTemplate.create(
-      req.body
+      data
     );
 
     res.status(201).json({
@@ -101,11 +120,33 @@ exports.updateWorkout =
 async (req, res) => {
   try {
 
+    const updateData = {
+      ...req.body
+    };
+
+    if (typeof updateData.days === "string") {
+      try {
+        updateData.days = JSON.parse(updateData.days);
+      } catch (parseError) {
+        return res.status(400).json({
+          success: false,
+          message: "days must be valid JSON"
+        });
+      }
+    }
+
+    if (req.file) {
+      updateData.thumbnail =
+        req.file.path ||
+        req.file.secure_url ||
+        req.file.url;
+    }
+
     const workout =
     await WorkoutTemplate
       .findByIdAndUpdate(
         req.params.id,
-        req.body,
+        updateData,
         {
           new: true,
           runValidators: true

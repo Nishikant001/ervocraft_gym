@@ -26,6 +26,11 @@ const {
   "../middleware/role.middleware"
 );
 
+const upload =
+require(
+  "../middleware/upload.middleware"
+);
+
 /**
  * @swagger
  * tags:
@@ -62,6 +67,7 @@ router.post(
   "/",
   protect,
   authorize("admin"),
+  upload.single("thumbnail"),
   createWorkout
 );
 
@@ -129,6 +135,7 @@ router.put(
   "/:id",
   protect,
   authorize("admin"),
+  upload.single("thumbnail"),
   updateWorkout
 );
 

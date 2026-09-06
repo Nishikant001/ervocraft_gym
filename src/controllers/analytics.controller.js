@@ -10,9 +10,6 @@ require("../models/Payment");
 const UserSubscription =
 require("../models/UserSubscription");
 
-const UserWorkout =
-require("../models/UserWorkout");
-
 const WorkoutSession =
 require("../models/WorkoutSession");
 

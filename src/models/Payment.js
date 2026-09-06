@@ -23,6 +23,19 @@ const paymentSchema =
 
       orderId: String,
 
+      productOrderId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Order",
+      },
+
+      orderType: {
+        type: String,
+        enum: ["subscription", "product"],
+        default: "subscription",
+      },
+
+      razorpaySignature: String,
+
       paymentId: String,
 
       amount: Number,

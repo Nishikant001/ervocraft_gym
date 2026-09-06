@@ -4,13 +4,35 @@ require("../models/Order");
 const Cart =
 require("../models/Cart");
 
-const Product =
-require("../models/Product");
+const getUnitPrice =
+(product) =>
+  product.salePrice &&
+  product.salePrice > 0
+    ? product.salePrice
+    : product.price;
 
+// Create an order from the authenticated user's cart.
+// Prices and stock are always read from the database.
 exports.createOrder =
 async(req,res)=>{
 
  try{
+
+   const shippingAddress =
+   typeof req.body.shippingAddress === "string"
+     ? req.body.shippingAddress.trim()
+     : "";
+
+   if(!shippingAddress){
+
+      return res.status(400)
+      .json({
+        success:false,
+        message:
+        "Shipping address is required"
+      });
+
+   }
 
    const cart =
    await Cart.findOne({
@@ -22,7 +44,7 @@ async(req,res)=>{
 
    if(
       !cart ||
-      cart.items.length === 0
+      !cart.items.length
    ){
 
       return res.status(400)
@@ -34,35 +56,65 @@ async(req,res)=>{
 
    }
 
+   const items = [];
    let total = 0;
 
-   const items =
-   cart.items.map(item=>{
+   for(const item of cart.items){
+
+      if(!Number.isInteger(item.quantity) ||
+         item.quantity <= 0){
+
+        return res.status(400)
+        .json({
+          success:false,
+          message:
+          "Invalid cart quantity"
+        });
+
+      }
+
+      const product =
+      item.productId;
+
+      if(!product ||
+         !product.status){
+
+        return res.status(400)
+        .json({
+          success:false,
+          message:
+          "One or more products are unavailable"
+        });
+
+      }
+
+      if(product.stock < item.quantity){
+
+        return res.status(400)
+        .json({
+          success:false,
+          message:
+          `Insufficient stock for ${product.name}`
+        });
+
+      }
 
       const price =
-      item.productId.salePrice ||
-      item.productId.price;
+      getUnitPrice(product);
 
-      total +=
-      price *
-      item.quantity;
+      const lineTotal =
+      price * item.quantity;
 
-      return {
+      total += lineTotal;
 
-        productId:
-        item.productId._id,
-
-        productName:
-        item.productId.name,
-
-        quantity:
-        item.quantity,
-
+      items.push({
+        productId:product._id,
+        productName:product.name,
+        quantity:item.quantity,
         price
+      });
 
-      };
-
-   });
+   }
 
    const order =
    await Order.create({
@@ -75,27 +127,23 @@ async(req,res)=>{
       totalAmount:
       total,
 
-      shippingAddress:
-      req.body.shippingAddress
+      shippingAddress,
+
+      paymentStatus:"pending",
+      orderStatus:"pending"
 
    });
 
    res.status(201).json({
-
       success:true,
-
       order
-
    });
 
  }catch(error){
 
    res.status(500).json({
-
       success:false,
-
       message:error.message
-
    });
 
  }
@@ -109,30 +157,62 @@ async(req,res)=>{
 
    const orders =
    await Order.find({
-
-      userId:
-      req.user._id
-
-   }).sort({
+      userId:req.user._id
+   })
+   .populate("items.productId")
+   .sort({
       createdAt:-1
    });
 
    res.status(200).json({
-
       success:true,
-
       orders
-
    });
 
  }catch(error){
 
    res.status(500).json({
-
       success:false,
-
       message:error.message
+   });
 
+ }
+
+};
+
+exports.getOrderById =
+async(req,res)=>{
+
+ try{
+
+   const order =
+   await Order.findOne({
+      _id:req.params.id,
+      userId:req.user._id
+   })
+   .populate("items.productId");
+
+   if(!order){
+
+      return res.status(404)
+      .json({
+        success:false,
+        message:
+        "Order not found"
+      });
+
+   }
+
+   res.status(200).json({
+      success:true,
+      order
+   });
+
+ }catch(error){
+
+   res.status(500).json({
+      success:false,
+      message:error.message
    });
 
  }
@@ -146,36 +226,38 @@ async(req,res)=>{
 
    const order =
    await Order.findByIdAndUpdate(
-
       req.params.id,
-
       {
         orderStatus:
         req.body.orderStatus
       },
-
       {
-        new:true
+        new:true,
+        runValidators:true
       }
-
    );
 
+   if(!order){
+
+      return res.status(404)
+      .json({
+        success:false,
+        message:
+        "Order not found"
+      });
+
+   }
+
    res.status(200).json({
-
       success:true,
-
       order
-
    });
 
  }catch(error){
 
    res.status(500).json({
-
       success:false,
-
       message:error.message
-
    });
 
  }

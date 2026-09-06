@@ -34,6 +34,35 @@ new mongoose.Schema({
 
  paymentId:String,
 
+ razorpayOrderId:{
+   type:String,
+   default:""
+ },
+
+ razorpayPaymentId:{
+   type:String,
+   default:""
+ },
+
+ razorpaySignature:{
+   type:String,
+   default:""
+ },
+
+ stockCommitted:{
+   type:Boolean,
+   default:false
+ },
+
+ cartCleared:{
+   type:Boolean,
+   default:false
+ },
+
+ paidAt:Date,
+
+ confirmedAt:Date,
+
  paymentStatus:{
    type:String,
    enum:[
